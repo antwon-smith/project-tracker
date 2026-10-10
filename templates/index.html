@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>Hitachi Project Tracker | Command Center</title>
+
+  <!-- Fully Offline Stylesheets (No CDNs) — tailwind.min.css is a locally compiled Tailwind v3 build -->
+  <link rel="stylesheet" href="/static/css/tailwind.min.css">
+  <link rel="stylesheet" href="/static/css/custom.css?v=2">
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans antialiased flex flex-col h-screen overflow-hidden select-none">
+
+  <!-- ================================================================= -->
+  <!-- TOP COMMAND BAR                                                   -->
+  <!-- ================================================================= -->
+  <header class="h-16 shrink-0 z-20 flex items-center justify-between gap-4 px-5 bg-slate-900 border-b border-slate-800/80">
+    <div class="flex items-center gap-3 min-w-0">
+      <!-- App Brand Mark -->
+      <div class="w-9 h-9 shrink-0 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 ring-1 ring-white/15">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"></path>
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <h1 class="text-sm font-semibold text-slate-100 tracking-tight truncate">Hitachi Project Tracker</h1>
+          <span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-slate-800 text-slate-400">Offline</span>
+        </div>
+        <p class="text-xs text-slate-500 truncate">Field Contractor Command Center</p>
+      </div>
+    </div>
+
+    <!-- Right Header Controls -->
+    <div class="flex items-center gap-3 shrink-0">
+      <!-- Local Data Vault Status -->
+      <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-800/50 text-xs" title="Data stored in %APPDATA%\ContractorApp\projects.db">
+        <span class="relative flex h-2 w-2">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+        </span>
+        <span class="text-slate-400">Vault</span>
+        <span class="font-mono text-slate-300">SQLite</span>
+      </div>
+
+      <!-- Live Clock -->
+      <div id="live-clock" class="hidden sm:block px-3 py-1.5 rounded-md bg-slate-800/50 font-mono text-xs text-slate-400 tabular-nums">
+        --:--:--
+      </div>
+
+      <!-- Active User Profile Selector -->
+      <div class="relative flex items-center gap-2.5" id="user-selector-container">
+        <label id="label-active-user" class="text-xs font-medium text-slate-400 select-none whitespace-nowrap">Active User</label>
+        <div class="relative">
+          <button id="btn-user-dropdown-toggle" type="button" class="flex items-center gap-2 bg-slate-800/90 hover:bg-slate-800 active:bg-slate-700/80 rounded-md px-2.5 py-1.5 ring-1 ring-slate-700/60 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-left" aria-haspopup="true" aria-expanded="false">
+            <div id="header-user-avatar" class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 font-semibold text-[10px] flex items-center justify-center shrink-0">
+              U
+            </div>
+            <span id="header-user-name" class="text-xs font-medium text-slate-100 max-w-[190px] truncate">
+              Select User
+            </span>
+            <svg id="header-user-chevron" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Floating High-Contrast Custom Dropdown Menu -->
+          <div id="user-dropdown-menu" class="hidden absolute right-0 top-full mt-1.5 w-64 rounded-lg bg-slate-900 border border-slate-700/80 shadow-2xl py-1 z-50 divide-y divide-slate-800/60">
+            <div class="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Select Active Member
+            </div>
+            <div id="user-dropdown-list" class="max-h-60 overflow-y-auto py-1">
+              <!-- Rendered items -->
+            </div>
+            <div class="p-1">
+              <button id="btn-dropdown-manage-team" type="button" class="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-indigo-300 hover:text-indigo-200 hover:bg-slate-800/80 rounded transition">
+                <svg class="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                <span>Manage Team...</span>
+              </button>
+            </div>
+          </div>
+          <select id="select-active-user" class="hidden" aria-hidden="true"></select>
+        </div>
+      </div>
+
+      <!-- PRIMARY ACTION: End of Shift -->
+      <button id="btn-header-shift" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-500/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900">
+        <!-- Heroicon: PaperAirplane -->
+        <svg class="w-4 h-4 -rotate-45 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"></path>
+        </svg>
+        <span>End of Shift</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================================================================= -->
+  <!-- MAIN APP CONTAINER                                                -->
+  <!-- ================================================================= -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- LEFT SIDEBAR: THE HITLIST -->
+    <aside class="w-80 lg:w-96 shrink-0 z-10 flex flex-col bg-slate-900 border-r border-slate-800/80">
+
+      <!-- Hitlist Header -->
+      <div class="px-4 pt-5 pb-4 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">All Projects</h2>
+            <span id="hitlist-count" class="px-1.5 py-0.5 rounded-full bg-slate-800 text-[11px] font-medium text-slate-400 tabular-nums">0</span>
+          </div>
+
+          <button id="btn-open-new-project-modal" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+            <!-- Heroicon: Plus -->
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+            </svg>
+            <span>New Project</span>
+          </button>
+        </div>
+
+        <!-- Hitlist Search & Filter -->
+        <div class="relative">
+          <!-- Heroicon: MagnifyingGlass -->
+          <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
+          </svg>
+          <input id="search-projects-input" type="text" placeholder="Filter projects or contractor..." class="w-full rounded-md border-0 bg-slate-950/60 pl-9 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+        </div>
+      </div>
+
+      <!-- Hitlist Projects Scroll Area -->
+      <div id="hitlist-container" class="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
+        <!-- Rendered dynamically by app.js -->
+        <div class="flex items-center justify-center h-32 text-sm text-slate-500">
+          Loading projects...
+        </div>
+      </div>
+
+      <!-- Hitlist Footer Status Legend -->
+      <div class="px-4 py-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px] shadow-emerald-500/70"></span>
+          <span>Active</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px] shadow-amber-400/70"></span>
+          <span>Blocked</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+          <span>Completed</span>
+        </div>
+      </div>
+
+      <!-- Hitlist Settings Option -->
+      <div class="px-4 py-2.5 border-t border-slate-800/80 bg-slate-900/60 flex items-center justify-between">
+        <button id="btn-open-settings-modal" type="button" class="inline-flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-indigo-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded py-1 px-1.5 -ml-1.5">
+          <!-- Heroicon: Cog6Tooth -->
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <span>Team Settings</span>
+        </button>
+        <span id="settings-team-count-badge" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 font-mono">1 member</span>
+      </div>
+    </aside>
+
+    <!-- ================================================================= -->
+    <!-- MAIN STAGE                                                        -->
+    <!-- ================================================================= -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
+
+      <!-- When no project is selected -->
+      <div id="empty-stage" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center">
+        <div class="w-14 h-14 mb-5 rounded-2xl bg-slate-900 flex items-center justify-center text-slate-500 shadow-xl shadow-black/30">
+          <!-- Heroicon: DocumentMagnifyingGlass -->
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path>
+          </svg>
+        </div>
+        <h3 class="text-base font-semibold text-slate-200 mb-1">No project selected</h3>
+        <p class="text-sm text-slate-400 max-w-sm mb-6">Select a project from All Projects, or create a new one to start tracking steps and shift progress.</p>
+        <button id="btn-empty-new-project" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-medium text-slate-200 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+          </svg>
+          Create New Project
+        </button>
+      </div>
+
+      <!-- Active Project Content Stage -->
+      <div id="active-project-stage" class="hidden flex-1 flex flex-col overflow-hidden">
+
+        <!-- PROJECT HEADER & TABS -->
+        <div class="shrink-0 px-8 pt-6 border-b border-slate-800/80">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
+            <div class="min-w-0">
+              <div class="flex items-center gap-3">
+                <span id="proj-header-status-dot" class="w-3 h-3 shrink-0 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15 shadow-[0_0_10px] shadow-emerald-500/60"></span>
+                <h2 id="proj-header-name" class="text-xl font-semibold text-slate-100 tracking-tight truncate">Project Title</h2>
+              </div>
+              <div class="flex items-center gap-2 mt-1.5 pl-6 text-sm text-slate-400">
+                <!-- Heroicon: UserGroup -->
+                <svg class="w-4 h-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
+                </svg>
+                <span id="proj-header-contractor" class="truncate">Hitachi Team</span>
+                <span class="text-slate-700">&bull;</span>
+                <span id="proj-header-id" class="font-mono text-xs text-slate-500 shrink-0">ID: #0</span>
+              </div>
+            </div>
+
+            <!-- Header Quick Actions (Status, Delete Project) -->
+            <div class="flex items-center gap-2 shrink-0">
+              <label for="proj-header-status-select" class="text-xs font-medium text-slate-500">Status</label>
+              <select id="proj-header-status-select" class="rounded-md border-0 bg-slate-900 py-1.5 pl-3 pr-8 text-sm font-medium text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                <option value="Active">Active</option>
+                <option value="Blocked">Blocked</option>
+                <option value="Completed">Completed</option>
+              </select>
+
+              <button id="btn-delete-project" title="Delete Project" class="p-2 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+                <!-- Heroicon: Trash -->
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- UNDERLINE TABS: active state is driven by aria-selected (see switchTab in app.js) -->
+          <nav role="tablist" class="flex gap-6 -mb-px overflow-x-auto">
+            <button role="tab" aria-selected="true" data-tab="overview" class="tab-btn group inline-flex items-center gap-2 pb-3 pt-1 border-b-2 border-transparent text-sm font-medium whitespace-nowrap text-slate-400 hover:text-slate-200 hover:border-slate-600 aria-selected:text-white aria-selected:border-indigo-500 transition-colors focus:outline-none focus-visible:text-white">
+              <!-- Heroicon: ChartBarSquare -->
+              <svg class="w-4 h-4 text-slate-500 group-aria-selected:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6"></path>
+              </svg>
+              <span>Overview</span>
+            </button>
+
+            <button role="tab" aria-selected="false" data-tab="phases" class="tab-btn group inline-flex items-center gap-2 pb-3 pt-1 border-b-2 border-transparent text-sm font-medium whitespace-nowrap text-slate-400 hover:text-slate-200 hover:border-slate-600 aria-selected:text-white aria-selected:border-indigo-500 transition-colors focus:outline-none focus-visible:text-white">
+              <!-- Heroicon: QueueList -->
+              <svg class="w-4 h-4 text-slate-500 group-aria-selected:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path>
+              </svg>
+              <span>Phases &amp; Steps</span>
+              <span id="tab-badge-steps" class="px-2 py-0.5 rounded-full bg-slate-800 text-[11px] font-medium text-slate-400 tabular-nums group-aria-selected:bg-indigo-500/15 group-aria-selected:text-indigo-300">0</span>
+            </button>
+
+            <button role="tab" aria-selected="false" data-tab="attachments" class="tab-btn group inline-flex items-center gap-2 pb-3 pt-1 border-b-2 border-transparent text-sm font-medium whitespace-nowrap text-slate-400 hover:text-slate-200 hover:border-slate-600 aria-selected:text-white aria-selected:border-indigo-500 transition-colors focus:outline-none focus-visible:text-white">
+              <!-- Heroicon: PaperClip -->
+              <svg class="w-4 h-4 text-slate-500 group-aria-selected:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.37l-9.878 9.88a1.5 1.5 0 01-2.122-2.123l8.818-8.818"></path>
+              </svg>
+              <span>Attachments</span>
+              <span id="tab-badge-attachments" class="px-2 py-0.5 rounded-full bg-slate-800 text-[11px] font-medium text-slate-400 tabular-nums group-aria-selected:bg-indigo-500/15 group-aria-selected:text-indigo-300">0</span>
+            </button>
+
+            <button role="tab" aria-selected="false" data-tab="timetrack" class="tab-btn group inline-flex items-center gap-2 pb-3 pt-1 border-b-2 border-transparent text-sm font-medium whitespace-nowrap text-slate-400 hover:text-slate-200 hover:border-slate-600 aria-selected:text-white aria-selected:border-indigo-500 transition-colors focus:outline-none focus-visible:text-white">
+              <!-- Heroicon: Clock -->
+              <svg class="w-4 h-4 text-slate-500 group-aria-selected:text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Time Tracking</span>
+              <span id="tab-badge-hours" class="px-2 py-0.5 rounded-full bg-slate-800 text-[11px] font-medium text-slate-400 tabular-nums group-aria-selected:bg-indigo-500/15 group-aria-selected:text-indigo-300">0h</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- TAB CONTENT PANELS CONTAINER -->
+        <div class="flex-1 overflow-y-auto">
+          <div class="px-8 py-6">
+
+            <!-- ========================================================= -->
+            <!-- TAB: OVERVIEW                                             -->
+            <!-- ========================================================= -->
+            <div id="tab-panel-overview" class="tab-panel space-y-6">
+
+              <!-- Completion Card -->
+              <section class="bg-slate-900 rounded-xl p-6 shadow-lg shadow-black/20">
+                <div class="flex items-end justify-between gap-4 mb-5">
+                  <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-400">Total Project Completion</p>
+                    <p id="overview-progress-ratio" class="mt-1 text-sm text-slate-400">0 of 0 steps completed</p>
+                  </div>
+                  <span id="overview-progress-percent" class="text-4xl font-semibold text-slate-100 tracking-tight tabular-nums">0%</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                  <div id="overview-progress-bar" class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500 ease-out" style="width: 0%;"></div>
+                </div>
+              </section>
+
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Project Scope & Notes -->
+                <section class="lg:col-span-5 bg-slate-900 rounded-xl p-6 shadow-lg shadow-black/20 flex flex-col">
+                  <div class="flex items-center justify-between mb-5">
+                    <h4 class="text-sm font-semibold text-slate-200">Project Scope &amp; Contacts</h4>
+                    <button id="btn-save-project-notes" class="px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 shadow-sm">
+                      Save Changes
+                    </button>
+                  </div>
+
+                  <div class="space-y-4 flex-1 flex flex-col">
+                    <!-- Project Manager Field with Mail / Teams links -->
+                    <div class="rounded-lg bg-slate-950/60 p-3 ring-1 ring-inset ring-slate-800/80 space-y-2">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"></path></svg>
+                          Project Manager
+                        </span>
+                        <div class="flex items-center gap-1.5" id="pm-link-actions">
+                          <a id="pm-mail-link" href="#" target="_blank" title="Send email to Project Manager" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 text-[11px] font-medium transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"></path></svg>
+                            Email
+                          </a>
+                          <a id="pm-teams-link" href="#" target="_blank" title="Open Teams chat with Project Manager" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 text-[11px] font-medium transition">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.502 47.14 47.14 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.269z"></path></svg>
+                            Teams
+                          </a>
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label for="edit-pm-name-input" class="block text-[11px] text-slate-500 mb-1">Name</label>
+                          <input id="edit-pm-name-input" type="text" placeholder="e.g. Alex Mercer" class="w-full rounded-md border-0 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        </div>
+                        <div>
+                          <label for="edit-pm-email-input" class="block text-[11px] text-slate-500 mb-1">Email</label>
+                          <input id="edit-pm-email-input" type="email" placeholder="alex.mercer@hitachi.com" class="w-full rounded-md border-0 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Contractor Lead / POC Field with Phone call link -->
+                    <div class="rounded-lg bg-slate-950/60 p-3 ring-1 ring-inset ring-slate-800/80 space-y-2">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path></svg>
+                          Contractor Lead / POC
+                        </span>
+                        <a id="contractor-phone-link" href="#" title="Call phone number" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-[11px] font-medium transition">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"></path></svg>
+                          Call
+                        </a>
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label for="edit-contractor-lead-input" class="block text-[11px] text-slate-500 mb-1">Lead / POC Name</label>
+                          <input id="edit-contractor-lead-input" type="text" placeholder="e.g. Marcus Vance" class="w-full rounded-md border-0 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        </div>
+                        <div>
+                          <label for="edit-contractor-phone-input" class="block text-[11px] text-slate-500 mb-1">Contact Phone</label>
+                          <input id="edit-contractor-phone-input" type="tel" placeholder="+1 (555) 019-2834" class="w-full rounded-md border-0 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label for="edit-contractor-input" class="block text-xs font-medium text-slate-400 mb-1.5">Contractor / Unit Name</label>
+                      <input id="edit-contractor-input" type="text" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+
+                    <div class="flex-1 flex flex-col">
+                      <label for="edit-notes-textarea" class="block text-xs font-medium text-slate-400 mb-1.5">Scope &amp; Engineering Notes</label>
+                      <textarea id="edit-notes-textarea" rows="4" placeholder="Engineering scope, substation location, safety requirements..." class="w-full flex-1 rounded-md border-0 bg-slate-950/60 p-3 text-sm leading-relaxed text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"></textarea>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Field Updates Feed -->
+                <section class="lg:col-span-7 bg-slate-900 rounded-xl p-6 shadow-lg shadow-black/20 flex flex-col">
+                  <h4 class="text-sm font-semibold text-slate-200 mb-5">Field Updates &amp; Shift Notes</h4>
+
+                  <!-- Composer -->
+                  <div class="rounded-lg bg-slate-950/60 ring-1 ring-inset ring-slate-800 focus-within:ring-2 focus-within:ring-indigo-500 transition mb-4">
+                    <textarea id="new-update-input" rows="2" placeholder="Record a field observation, milestone, or blocker..." class="block w-full border-0 bg-transparent px-3 pt-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none resize-none"></textarea>
+                    <div class="flex items-center justify-between gap-3 px-3 pb-3 pt-2">
+                      <span class="text-[11px] text-slate-500 truncate">Ctrl + Enter to post &bull; queued for Shift Report</span>
+                      <button id="btn-post-update" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                        <span>Post Update</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Updates Feed List -->
+                  <div id="overview-updates-list" class="flex-1 overflow-y-auto max-h-80 -mx-2 px-2">
+                    <!-- Rendered dynamically -->
+                    <div class="text-sm text-slate-500 text-center py-8">No updates logged yet.</div>
+                  </div>
+                </section>
+
+              </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- TAB: PHASES & STEPS (ACCORDION)                           -->
+            <!-- ========================================================= -->
+            <div id="tab-panel-phases" class="tab-panel hidden space-y-5">
+
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <h3 class="text-sm font-semibold text-slate-200">Work Breakdown Structure</h3>
+                  <p class="text-sm text-slate-400">Expand a phase, check off steps, or add new ones inline.</p>
+                </div>
+
+                <button id="btn-open-add-phase-modal" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-medium text-slate-200 transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                  <!-- Heroicon: Plus -->
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+                  </svg>
+                  <span>Add Phase</span>
+                </button>
+              </div>
+
+              <!-- Accordion Container -->
+              <div id="phases-accordion-container" class="space-y-4">
+                <!-- Rendered dynamically by app.js -->
+              </div>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- TAB: ATTACHMENTS                                          -->
+            <!-- ========================================================= -->
+            <div id="tab-panel-attachments" class="tab-panel hidden space-y-6">
+
+              <!-- Drag and Drop Zone -->
+              <div id="drop-zone" class="relative flex flex-col items-center justify-center p-10 text-center rounded-xl border-2 border-dashed border-slate-800 hover:border-indigo-500/60 bg-slate-900/40 hover:bg-slate-900 cursor-pointer transition-colors duration-200">
+                <input type="file" id="file-input-fallback" class="hidden" multiple>
+
+                <div class="w-12 h-12 mb-4 rounded-full bg-slate-800 flex items-center justify-center text-indigo-400">
+                  <!-- Heroicon: ArrowUpTray -->
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"></path>
+                  </svg>
+                </div>
+
+                <h4 class="text-sm font-semibold text-slate-200 mb-1">Drop site photos, test sheets, or blueprints here</h4>
+                <p class="text-xs text-slate-400 max-w-md mb-5">Stored in %APPDATA%\ContractorApp\attachments and automatically attached to your End-of-Shift Outlook draft.</p>
+
+                <button type="button" id="btn-browse-files" class="px-4 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-medium text-slate-200 transition-colors">
+                  Browse Files
+                </button>
+              </div>
+
+              <!-- Attachments List -->
+              <section class="bg-slate-900 rounded-xl p-6 shadow-lg shadow-black/20">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="text-sm font-semibold text-slate-200">Uploaded Attachments</h4>
+                  <span id="attachments-count-label" class="text-xs text-slate-500 tabular-nums">0 files</span>
+                </div>
+
+                <div id="attachments-list">
+                  <!-- Rendered dynamically -->
+                  <div class="text-sm text-slate-500 text-center py-8">No attachments uploaded yet.</div>
+                </div>
+              </section>
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- TAB: TIME TRACKING                                        -->
+            <!-- ========================================================= -->
+            <div id="tab-panel-timetrack" class="tab-panel hidden space-y-6">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Form: Log Time -->
+                <section class="lg:col-span-5 bg-slate-900 rounded-xl p-6 shadow-lg shadow-black/20">
+                  <h4 class="text-sm font-semibold text-slate-200 mb-5">Log Shift Time</h4>
+
+                  <form id="form-log-time" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label for="timelog-start" class="block text-xs font-medium text-slate-400 mb-1.5">Start Time</label>
+                        <input type="time" id="timelog-start" required class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                      </div>
+                      <div>
+                        <label for="timelog-end" class="block text-xs font-medium text-slate-400 mb-1.5">End Time</label>
+                        <input type="time" id="timelog-end" required class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="flex items-center justify-between mb-1.5">
+                        <label for="timelog-hours" class="block text-xs font-medium text-slate-400">Hours Logged</label>
+                        <button type="button" id="btn-calc-hours" class="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors">Auto-calculate</button>
+                      </div>
+                      <input type="number" step="any" min="0.01" id="timelog-hours" required placeholder="e.g. 2, 4.5" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 font-mono text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+
+                    <div>
+                      <label for="timelog-desc" class="block text-xs font-medium text-slate-400 mb-1.5">Activity / Task Description</label>
+                      <textarea id="timelog-desc" rows="3" placeholder="Commissioning checks, fiber splicing, safety audits..." class="w-full rounded-md border-0 bg-slate-950/60 p-3 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm font-semibold text-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                      <!-- Heroicon: Check -->
+                      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                      </svg>
+                      <span>Record Time Entry</span>
+                    </button>
+                  </form>
+                </section>
+
+                <!-- Time Ledger -->
+                <section class="lg:col-span-7 bg-slate-900 rounded-xl p-6 shadow-lg shadow-black/20 flex flex-col">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-semibold text-slate-200">Project Time Ledger</h4>
+                    <div class="flex items-baseline gap-2">
+                      <span class="text-xs text-slate-500">Total</span>
+                      <span id="timetrack-total-hours" class="text-lg font-semibold text-slate-100 tabular-nums">0.0 hrs</span>
+                    </div>
+                  </div>
+
+                  <div id="timelogs-list" class="flex-1 overflow-y-auto max-h-96 -mx-2 px-2">
+                    <!-- Rendered dynamically -->
+                    <div class="text-sm text-slate-500 text-center py-10">No time logged for this project yet.</div>
+                  </div>
+                </section>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODALS                                                          -->
+  <!-- =============================================================== -->
+
+  <!-- MODAL 1: END OF SHIFT REPORT (OUTLOOK INTEGRATION) -->
+  <div id="modal-shift" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 modal-backdrop hidden">
+    <div class="w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden rounded-xl bg-slate-900 ring-1 ring-white/5 shadow-2xl shadow-black/50 modal-animate-in">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+            <!-- Heroicon: Envelope -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-slate-100">End of Shift Report</h3>
+            <p class="text-xs text-slate-400">Review unreported work before generating the Outlook draft</p>
+          </div>
+        </div>
+
+        <button id="btn-close-shift-modal" class="p-1.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors" aria-label="Close">
+          <!-- Heroicon: XMark -->
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-4 text-sm">
+
+        <!-- Active Author Attribution -->
+        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium">Prepared By:</span>
+            <span id="shift-reporting-user-badge" class="font-semibold text-indigo-300">Lead Technician</span>
+          </div>
+          <span class="text-slate-500 text-[11px]">(Attributed to current active user)</span>
+        </div>
+
+        <!-- Project Selector for Report -->
+        <div class="rounded-lg bg-slate-950/60 p-4 border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Select Projects to Include</h4>
+              <p class="text-[11px] text-slate-400 mt-0.5">Only items for selected projects will be included in the PM email report.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btn-shift-select-all" class="text-[11px] font-medium text-indigo-400 hover:text-indigo-300 transition-colors">Select All</button>
+              <span class="text-slate-700">&bull;</span>
+              <button type="button" id="btn-shift-select-active" class="text-[11px] font-medium text-slate-400 hover:text-slate-300 transition-colors">Active Only</button>
+            </div>
+          </div>
+          <div id="shift-projects-selector-container" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <!-- Dynamically populated project selection cards -->
+          </div>
+        </div>
+
+        <!-- Summary KPI Grid -->
+        <div class="grid grid-cols-4 gap-3">
+          <div class="rounded-lg bg-slate-950/50 p-4 text-center">
+            <div id="shift-summary-hours" class="text-2xl font-semibold text-slate-100 tabular-nums">0.0</div>
+            <div class="mt-1 text-[11px] font-medium text-slate-500">Hours Logged</div>
+          </div>
+          <div class="rounded-lg bg-slate-950/50 p-4 text-center">
+            <div id="shift-summary-steps" class="text-2xl font-semibold text-emerald-400 tabular-nums">0</div>
+            <div class="mt-1 text-[11px] font-medium text-slate-500">Steps Done</div>
+          </div>
+          <div class="rounded-lg bg-slate-950/50 p-4 text-center">
+            <div id="shift-summary-updates" class="text-2xl font-semibold text-amber-400 tabular-nums">0</div>
+            <div class="mt-1 text-[11px] font-medium text-slate-500">Field Notes</div>
+          </div>
+          <div class="rounded-lg bg-slate-950/50 p-4 text-center">
+            <div id="shift-summary-attachments" class="text-2xl font-semibold text-indigo-400 tabular-nums">0</div>
+            <div class="mt-1 text-[11px] font-medium text-slate-500">Attachments</div>
+          </div>
+        </div>
+
+        <!-- Completed Steps -->
+        <div class="rounded-lg bg-slate-950/50 p-4">
+          <h4 class="flex items-center justify-between mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span>Completed Steps</span>
+            <span id="shift-steps-badge" class="font-medium normal-case tracking-normal text-emerald-400 tabular-nums">0 items</span>
+          </h4>
+          <ul id="shift-steps-list" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+            <li class="text-slate-500 italic">No completed steps to report.</li>
+          </ul>
+        </div>
+
+        <!-- Shift Time Logs -->
+        <div class="rounded-lg bg-slate-950/50 p-4">
+          <h4 class="flex items-center justify-between mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span>Time Logs</span>
+            <span id="shift-timelogs-badge" class="font-medium normal-case tracking-normal text-slate-300 tabular-nums">0 items</span>
+          </h4>
+          <ul id="shift-timelogs-list" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+            <li class="text-slate-500 italic">No time logs to report.</li>
+          </ul>
+        </div>
+
+        <!-- Field Updates -->
+        <div class="rounded-lg bg-slate-950/50 p-4">
+          <h4 class="flex items-center justify-between mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span>Field Notes &amp; Updates</span>
+            <span id="shift-updates-badge" class="font-medium normal-case tracking-normal text-amber-400 tabular-nums">0 items</span>
+          </h4>
+          <ul id="shift-updates-list" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+            <li class="text-slate-500 italic">No updates to report.</li>
+          </ul>
+        </div>
+
+        <!-- Attached Files -->
+        <div class="rounded-lg bg-slate-950/50 p-4">
+          <h4 class="flex items-center justify-between mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span>Files to Attach in Outlook</span>
+            <span id="shift-attachments-badge" class="font-medium normal-case tracking-normal text-indigo-400 tabular-nums">0 items</span>
+          </h4>
+          <ul id="shift-attachments-list" class="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+            <li class="text-slate-500 italic">No files to attach.</li>
+          </ul>
+        </div>
+
+        <!-- Notice -->
+        <div class="flex items-start gap-2.5 rounded-lg bg-indigo-500/10 p-3.5 text-xs leading-relaxed text-slate-300 border border-indigo-500/20">
+          <!-- Heroicon: InformationCircle -->
+          <svg class="w-4 h-4 mt-0.5 shrink-0 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"></path>
+          </svg>
+          <div class="space-y-1">
+            <div><strong class="text-indigo-300 font-semibold">Outlook Review &amp; Delivery:</strong> Review the complete report before sending.</div>
+            <p class="text-slate-400 text-[11px]">
+              <span class="text-slate-200 font-medium">New Outlook / Web:</span> Click <span class="text-indigo-300 font-medium">"Copy Formatted Email"</span> and press <kbd class="px-1 py-0.5 bg-slate-800 rounded text-slate-300 font-mono text-[10px]">Ctrl+V</kbd> in your email draft. Or click <span class="text-slate-300 font-medium">"Launch Classic Outlook"</span> for desktop COM automation.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 bg-slate-950/40 border-t border-slate-800">
+        <div class="flex items-center gap-2">
+          <button id="btn-preview-shift" type="button" title="View formatted email preview in browser" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-xs font-medium text-slate-200 ring-1 ring-slate-700/60 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"></path>
+            </svg>
+            <span>Preview in Browser</span>
+          </button>
+
+          <button id="btn-download-eml" type="button" title="Download .eml draft file to drag or open in Outlook" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-xs font-medium text-slate-200 ring-1 ring-slate-700/60 transition-colors">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"></path>
+            </svg>
+            <span>Download .eml</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button id="btn-cancel-shift" class="px-3.5 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors">
+            Cancel
+          </button>
+
+          <button id="btn-trigger-outlook" title="Open draft in Classic Desktop Outlook" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-slate-800 hover:bg-slate-700 active:bg-slate-600 disabled:opacity-60 disabled:cursor-wait text-xs font-medium text-slate-200 ring-1 ring-slate-700/60 transition-colors">
+            <span id="trigger-outlook-label" class="inline-flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"></path>
+              </svg>
+              <span>Launch Classic Outlook</span>
+            </span>
+          </button>
+
+          <button id="btn-copy-shift-email" title="Copy formatted HTML to clipboard to paste directly into New Outlook or webmail" class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-60 disabled:cursor-wait text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-colors">
+            <span id="copy-email-label" class="inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"></path>
+              </svg>
+              <span>Copy Formatted Email</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL 2: CREATE NEW PROJECT -->
+  <div id="modal-new-project" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 modal-backdrop hidden">
+    <div class="w-full max-w-lg overflow-hidden rounded-xl bg-slate-900 ring-1 ring-white/5 shadow-2xl shadow-black/50 modal-animate-in">
+
+      <div class="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+        <h3 class="text-base font-semibold text-slate-100">Create New Project</h3>
+        <button id="btn-close-new-project-modal" class="p-1.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors" aria-label="Close">
+          <!-- Heroicon: XMark -->
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="form-create-project" class="p-6 space-y-4">
+        <div>
+          <label for="new-proj-name" class="block text-xs font-medium text-slate-400 mb-1.5">Project Name <span class="text-red-400">*</span></label>
+          <input type="text" id="new-proj-name" required placeholder="e.g. Substation SCADA Gateway Modernization" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+        </div>
+
+        <div>
+          <label for="new-proj-contractor" class="block text-xs font-medium text-slate-400 mb-1.5">Contractor / Unit Name <span class="text-red-400">*</span></label>
+          <input type="text" id="new-proj-contractor" required placeholder="e.g. Hitachi Energy Field Crew" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="new-proj-pm-name" class="block text-xs font-medium text-slate-400 mb-1.5">Project Manager Name</label>
+            <input type="text" id="new-proj-pm-name" placeholder="e.g. Alex Mercer" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+          </div>
+          <div>
+            <label for="new-proj-pm-email" class="block text-xs font-medium text-slate-400 mb-1.5">PM Email</label>
+            <input type="email" id="new-proj-pm-email" placeholder="alex.mercer@hitachi.com" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="new-proj-contractor-lead" class="block text-xs font-medium text-slate-400 mb-1.5">Contractor Lead / POC</label>
+            <input type="text" id="new-proj-contractor-lead" placeholder="e.g. Marcus Vance" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+          </div>
+          <div>
+            <label for="new-proj-contractor-phone" class="block text-xs font-medium text-slate-400 mb-1.5">Lead Contact Phone</label>
+            <input type="tel" id="new-proj-contractor-phone" placeholder="+1 (555) 019-2834" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+          </div>
+        </div>
+
+        <div>
+          <label for="new-proj-status" class="block text-xs font-medium text-slate-400 mb-1.5">Initial Status</label>
+          <select id="new-proj-status" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            <option value="Active">Active</option>
+            <option value="Blocked">Blocked</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="new-proj-notes" class="block text-xs font-medium text-slate-400 mb-1.5">Scope &amp; Description</label>
+          <textarea id="new-proj-notes" rows="3" placeholder="Commissioning milestones, deliverables..." class="w-full rounded-md border-0 bg-slate-950/60 p-3 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" id="btn-cancel-create-project" class="px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-colors">
+            Create Project
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL 3: ADD NEW PHASE -->
+  <div id="modal-add-phase" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 modal-backdrop hidden">
+    <div class="w-full max-w-sm overflow-hidden rounded-xl bg-slate-900 ring-1 ring-white/5 shadow-2xl shadow-black/50 modal-animate-in">
+
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+        <h3 class="text-sm font-semibold text-slate-100">Add Phase</h3>
+        <button id="btn-close-add-phase-modal" class="p-1.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors" aria-label="Close">
+          <!-- Heroicon: XMark -->
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="form-add-phase" class="p-5 space-y-4">
+        <div>
+          <label for="new-phase-name-input" class="block text-xs font-medium text-slate-400 mb-1.5">Phase Title <span class="text-red-400">*</span></label>
+          <input type="text" id="new-phase-name-input" required placeholder="e.g. Phase 4: Relay Calibration" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+        </div>
+
+        <div>
+          <label for="new-phase-notes-input" class="block text-xs font-medium text-slate-400 mb-1.5">Phase Notes / Scope (Optional)</label>
+          <textarea id="new-phase-notes-input" rows="2" placeholder="Specific notes, safety lockouts, or handover criteria for this phase..." class="w-full rounded-md border-0 bg-slate-950/60 p-2.5 text-xs text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button type="button" id="btn-cancel-add-phase" class="px-3.5 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white transition-colors">
+            Add Phase
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL 4: STEP DETAILS POP-OUT -->
+  <div id="modal-step-details" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 modal-backdrop hidden">
+    <div class="w-full max-w-lg overflow-hidden rounded-xl bg-slate-900 ring-1 ring-white/10 shadow-2xl shadow-black/60 modal-animate-in">
+
+      <div class="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-400">
+            <!-- Heroicon: DocumentText -->
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-slate-100">Step Details</h3>
+            <p id="modal-step-phase-label" class="text-xs text-slate-400">Phase Name</p>
+          </div>
+        </div>
+
+        <button id="btn-close-step-modal" class="p-1.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors" aria-label="Close">
+          <!-- Heroicon: XMark -->
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="form-edit-step-details" class="p-6 space-y-4">
+        <input type="hidden" id="modal-step-id">
+
+        <div>
+          <label for="modal-step-name-input" class="block text-xs font-medium text-slate-400 mb-1.5">Step Name <span class="text-red-400">*</span></label>
+          <input type="text" id="modal-step-name-input" required class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+        </div>
+
+        <div class="flex items-center justify-between p-3 rounded-lg bg-slate-950/50 border border-slate-800/80">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-medium text-slate-300">Completion Status:</span>
+            <span id="modal-step-status-badge" class="px-2 py-0.5 rounded text-[11px] font-semibold">Pending</span>
+          </div>
+          <span id="modal-step-completed-time" class="text-xs text-slate-500 font-mono"></span>
+        </div>
+
+        <div>
+          <label for="modal-step-details-textarea" class="block text-xs font-medium text-slate-400 mb-1.5">
+            Step Details &amp; Execution Notes
+            <span class="text-[11px] text-slate-500 font-normal ml-1">(Optional instructions, checklist, telemetry readings)</span>
+          </label>
+          <textarea id="modal-step-details-textarea" rows="6" placeholder="Enter specific instructions, relay settings, calibration notes, tool requirements, or safety steps..." class="w-full rounded-md border-0 bg-slate-950/60 p-3 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
+          <button type="button" id="btn-cancel-step-modal" class="px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-colors">
+            Save Details
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL 4: TEAM SETTINGS -->
+  <div id="modal-settings" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 modal-backdrop hidden">
+    <div class="w-full max-w-xl overflow-hidden rounded-xl bg-slate-900 ring-1 ring-white/5 shadow-2xl shadow-black/50 modal-animate-in">
+
+      <div class="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+            <!-- Heroicon: Cog6Tooth -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-slate-100">Team &amp; User Settings</h3>
+            <p class="text-xs text-slate-400">Manage technicians and active profiles for report attribution</p>
+          </div>
+        </div>
+        <button id="btn-close-settings-modal" class="p-1.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors" aria-label="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <!-- Section: Active Team Members -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Team Members</h4>
+            <span id="settings-users-count" class="text-xs text-slate-500 font-mono">0 active</span>
+          </div>
+
+          <div id="settings-users-list" class="space-y-2">
+            <!-- Dynamically rendered user rows -->
+          </div>
+        </div>
+
+        <!-- Section: Add New Team Member Form -->
+        <div class="pt-4 border-t border-slate-800">
+          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Add Team Member</h4>
+          <form id="form-add-user" class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label for="new-user-name" class="block text-xs font-medium text-slate-400 mb-1">Full Name <span class="text-red-400">*</span></label>
+                <input type="text" id="new-user-name" required placeholder="e.g. Marcus Vance" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+              </div>
+              <div>
+                <label for="new-user-role" class="block text-xs font-medium text-slate-400 mb-1">Role / Title</label>
+                <input type="text" id="new-user-role" placeholder="e.g. Lead Technician, SCADA Engineer" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+              </div>
+            </div>
+            <div>
+              <label for="new-user-email" class="block text-xs font-medium text-slate-400 mb-1">Email Address</label>
+              <input type="email" id="new-user-email" placeholder="e.g. marcus.vance@contractor.com" class="w-full rounded-md border-0 bg-slate-950/60 px-3 py-2 text-sm text-slate-200 placeholder-slate-600 ring-1 ring-inset ring-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+            <div class="pt-2 flex justify-end">
+              <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-500/20 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+                </svg>
+                <span>Add Member</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end px-6 py-4 bg-slate-950/40 border-t border-slate-800">
+        <button type="button" id="btn-close-settings-footer" class="px-4 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2 pointer-events-none"></div>
+
+  <!-- COMPLETE APP LOGIC SCRIPT -->
+  <script src="/static/js/app.js?v=9"></script>
+</body>
+</html>

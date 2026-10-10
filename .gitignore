@@ -1,0 +1,41 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Build & PyInstaller artifacts
+build/
+dist/
+*.egg-info/
+
+# Binaries & Bundled Tools
+cloudflared.exe
+*.exe
+
+# Database & Runtime Data
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
