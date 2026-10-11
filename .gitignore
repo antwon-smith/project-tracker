@@ -19,9 +19,6 @@ build/
 dist/
 *.egg-info/
 
-# Binaries & Bundled Tools
-cloudflared.exe
-*.exe
 
 # Database & Runtime Data
 *.db
