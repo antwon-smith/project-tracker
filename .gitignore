@@ -14,9 +14,8 @@ env/
 venv/
 ENV/
 
-# Build & PyInstaller artifacts
+# Build artifacts (dist is tracked for release executable)
 build/
-dist/
 *.egg-info/
 
 
